@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">BaixarImagemComThreads</string>
+    <string name="url_ws">http://api.openweathermap.org/data/2.5/forecast/daily?q=</string>
+    <string name="chave"></string>
+</resources>
