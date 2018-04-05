@@ -1,12 +1,22 @@
 package br.com.bossini.baixarimagemcomthreads;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -15,12 +25,18 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
+import br.com.bossini.baixarimagemcomthreads.persistencia.PrevisaoDAO;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
 public class MainActivity extends AppCompatActivity {
 
+    private PrevisaoDAO previsaoDAO;
+    private ListView previsoesListView;
+    private List<Previsao> previsoes;
+    private ArrayAdapter <Previsao> adapter;
     private EditText cidadeEditText;
     private TextView descricaoTextView;
     private TextView minTextView;
@@ -34,14 +50,51 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         cidadeEditText = (EditText)
                 findViewById(R.id.cidadeEditText);
-        descricaoTextView = (TextView)
-                findViewById(R.id.descricaoTextView);
-        minTextView = (TextView)
-                findViewById(R.id.minTextView);
-        maxTextView = (TextView)
-                findViewById(R.id.maxTextView);
-        humidityTextView = (TextView)
-                findViewById(R.id.humidityTextView);
+        previsoesListView = (ListView)
+                findViewById(R.id.previsoesListView);
+        previsaoDAO = new PrevisaoDAO(this);
+        previsoes = previsaoDAO.buscarTodos();
+        adapter = new ArrayAdapter<Previsao>(this, -1, previsoes){
+            @NonNull
+            @Override
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                LayoutInflater inflater = (LayoutInflater)
+                        MainActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                View view = inflater.inflate(R.layout.linha_previsao, parent, false);
+
+                ImageView iconeImageView =
+                        (ImageView) view.findViewById(R.id.iconeImageView);
+                TextView descricaoTextView =
+                        (TextView) view.findViewById(R.id.descricaoTextView);
+                TextView maxTextView =
+                        (TextView) view.findViewById(R.id.maxTextView);
+                TextView minTextView =
+                        (TextView) view.findViewById(R.id.minTextView);
+
+                TextView humidityTextView =
+                        (TextView) view.findViewById(R.id.humidityTextView);
+
+                TextView nomeCidadeTextView =
+                        (TextView) view.findViewById(R.id.nomeCidadeTextView);
+
+                Previsao caraEscolhido = getItem (position);
+
+                //usar Picasso para carregar a figura
+                String urlFigura = "http://openweathermap.org/img/w/"
+                        + caraEscolhido.getIcone() + ".png";
+
+               Picasso.with(MainActivity.this).load(urlFigura).into(iconeImageView);
+
+                descricaoTextView.setText(caraEscolhido.getDescricao());
+                maxTextView.setText(Double.toString(caraEscolhido.getMax()));
+                minTextView.setText (Double.toString(caraEscolhido.getMin()));
+                humidityTextView.setText(Integer.toString(caraEscolhido.getHumidade()));
+                nomeCidadeTextView.setText(caraEscolhido.getNomeCidade());
+                return view;
+            }
+        };
+        previsoesListView.setAdapter(adapter);
+
     }
 
     public void buscar (View view){
@@ -103,8 +156,8 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String json) {
-            Toast.makeText(MainActivity.this, json,
-                    Toast.LENGTH_SHORT).show();
+            //Toast.makeText(MainActivity.this, json,
+              //      Toast.LENGTH_SHORT).show();
             try {
                 JSONObject previsao = new JSONObject(json);
                 JSONArray list = previsao.getJSONArray("list");
@@ -118,13 +171,21 @@ public class MainActivity extends AppCompatActivity {
                                 getJSONObject(0).getString ("description");
                 Date date = new Date();
                 date.setTime(dt * 1000);
-                descricaoTextView.setText(
-                        String.format("%s : %s",
-                                sdf.format(date), descricao));
-                minTextView.setText("Min: " + Double.toString(min));
-                maxTextView.setText("Max: " + Double.toString(max));
-                humidityTextView.setText("Hum: " + Double.toString(humidade));
+                String diaSemana = sdf.format(date);
+                String nomeCidade = previsao.
+                            getJSONObject("city").
+                            getString ("name");
 
+                String icone = dia.
+                            getJSONArray("weather").
+                            getJSONObject(0).
+                            getString ("icon");
+                Previsao p = new Previsao (descricao, diaSemana, min, max, humidade, nomeCidade, icone);
+                previsoes.add(p);
+                long id = previsaoDAO.inserir(p);
+                Toast.makeText(MainActivity.this,
+                        Long.toString(id), Toast.LENGTH_SHORT).show();
+                adapter.notifyDataSetChanged();
 
             } catch (JSONException e) {
                 e.printStackTrace();
