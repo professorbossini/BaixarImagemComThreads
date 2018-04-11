@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import br.com.bossini.baixarimagemcomthreads.persistencia.PrevisaoDAO;
 import okhttp3.OkHttpClient;
@@ -43,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView maxTextView;
     private TextView humidityTextView;
     private SimpleDateFormat sdf =
-            new SimpleDateFormat("EEEE");
+            new SimpleDateFormat("EEEE", new Locale("pt", "BR"));
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
                 findViewById(R.id.cidadeEditText);
         previsoesListView = (ListView)
                 findViewById(R.id.previsoesListView);
+
         previsaoDAO = new PrevisaoDAO(this);
         previsoes = previsaoDAO.buscarTodos();
         adapter = new ArrayAdapter<Previsao>(this, -1, previsoes){
@@ -77,7 +80,23 @@ public class MainActivity extends AppCompatActivity {
                 TextView nomeCidadeTextView =
                         (TextView) view.findViewById(R.id.nomeCidadeTextView);
 
+                Button apagarButton = (Button)
+                        view.findViewById(R.id.apagarButton);
                 Previsao caraEscolhido = getItem (position);
+                apagarButton.setTag(caraEscolhido);
+
+                apagarButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Previsao previsaoAApagar = (Previsao) view.getTag();
+                        previsaoDAO.apagar(previsaoAApagar);
+                        previsoes = previsaoDAO.buscarTodos();
+                        adapter.notifyDataSetChanged();
+                        //previsoesListView.invalidate();
+                        //preprevisoes.remove(previsaoAApagar);
+                    }
+                });
+
 
                 //usar Picasso para carregar a figura
                 String urlFigura = "http://openweathermap.org/img/w/"
@@ -85,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
 
                Picasso.with(MainActivity.this).load(urlFigura).into(iconeImageView);
 
-                descricaoTextView.setText(caraEscolhido.getDescricao());
+                descricaoTextView.setText(caraEscolhido.getDiaDaSemana() + " : " + caraEscolhido.getDescricao());
                 maxTextView.setText(Double.toString(caraEscolhido.getMax()));
                 minTextView.setText (Double.toString(caraEscolhido.getMin()));
                 humidityTextView.setText(Integer.toString(caraEscolhido.getHumidade()));

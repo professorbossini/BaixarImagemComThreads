@@ -49,6 +49,9 @@ public class PrevisaoDAO {
         while (c.moveToNext()){
             Previsao p = new Previsao();
 
+            int id = c.getInt(c.getColumnIndexOrThrow("id"));
+            p.setId(id);
+
             String descricao = c.getString(
                     c.getColumnIndexOrThrow("descricao"));
             p.setDescricao(descricao);
@@ -79,5 +82,17 @@ public class PrevisaoDAO {
         c.close();
         db.close();
         return previsoes;
+    }
+
+    public void apagar (Previsao previsao){
+        DBHelper helper = new DBHelper(context);
+        SQLiteDatabase db = helper.getWritableDatabase();
+        ///String [] vetor = new String [1];
+        //vetor[0] = Integer.toString(previsao.getId());
+        //poderia fazer como acima tbm
+        db.delete("previsao", "id=?",
+                new String[]{Integer.toString(previsao.getId())});
+        db.close();
+        helper.close();
     }
 }

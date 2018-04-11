@@ -5,6 +5,7 @@ package br.com.bossini.baixarimagemcomthreads;
  */
 
 public class Previsao {
+    private int id;
     private String descricao, diaDaSemana, nomeCidade, icone;
     private double min, max;
     private int humidade;
@@ -19,6 +20,14 @@ public class Previsao {
         this.humidade = humidade;
         this.nomeCidade = nomeCidade;
         this.icone = icone;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public Previsao(){
@@ -79,5 +88,24 @@ public class Previsao {
 
     public void setNomeCidade(String nomeCidade) {
         this.nomeCidade = nomeCidade;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Previsao previsao = (Previsao) o;
+
+        if (Double.compare(previsao.min, min) != 0) return false;
+        if (Double.compare(previsao.max, max) != 0) return false;
+        if (humidade != previsao.humidade) return false;
+        if (descricao != null ? !descricao.equals(previsao.descricao) : previsao.descricao != null)
+            return false;
+        if (diaDaSemana != null ? !diaDaSemana.equals(previsao.diaDaSemana) : previsao.diaDaSemana != null)
+            return false;
+        if (nomeCidade != null ? !nomeCidade.equals(previsao.nomeCidade) : previsao.nomeCidade != null)
+            return false;
+        return icone != null ? icone.equals(previsao.icone) : previsao.icone == null;
     }
 }
